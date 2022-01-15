@@ -8,6 +8,7 @@ build="build.rs"
 links="wfc"
 keywords=["wfc", "c", "ffi"]
 description="Binding to the krychu/wfc C library"
+readme="README.md"
 
 [dependencies]
 libc="0.2"

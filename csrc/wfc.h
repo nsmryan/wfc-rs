@@ -351,7 +351,7 @@ struct wfc_image *wfc_img_load(const char *filename)
 #endif // WFC_USE_STB
 
 // Return NULL on error
-struct wfc_image *wfc_img_copy(struct wfc_image *image)
+struct wfc_image *wfc_img_copy(const struct wfc_image *image)
 {
   struct wfc_image *copy = malloc(sizeof(*copy));
   if (copy == NULL) {

@@ -1,0 +1,16 @@
+[package]
+name = "wfc-rs"
+version = "0.1.0"
+authors = ["Noah Ryan <nsmryan@gmail.com>"]
+edition = "2018"
+license="MIT"
+build="build.rs"
+links="wfc"
+
+[dependencies]
+libc="*"
+
+[build-dependencies]
+cc="*"
+bindgen="*"
+

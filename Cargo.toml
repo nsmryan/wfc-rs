@@ -10,8 +10,8 @@ keywords=["wfc", "c", "ffi"]
 description="Binding to the krychu/wfc C library"
 
 [dependencies]
-libc="*"
+libc="0.2"
 
 [build-dependencies]
-cc="*"
+cc="1.0"
 

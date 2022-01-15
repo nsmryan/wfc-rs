@@ -103,10 +103,10 @@ impl Wfc {
                        mut image: NonNull<WfcImage>,
                        tile_width: i32,
                        tile_height: i32,
-                       expand_input: i32,
-                       xflip_tiles: i32,
-                       yflip_tiles: i32,
-                       rotate_tiles: i32) -> Option<Wfc> {
+                       expand_input: bool,
+                       xflip_tiles: bool,
+                       yflip_tiles: bool,
+                       rotate_tiles: bool) -> Option<Wfc> {
         unsafe {
             //let mut image = WfcImage::from_file(filename)?;
             let wfc = wfc_overlapping(output_width,
@@ -181,14 +181,14 @@ impl Drop for Wfc {
 #[test]
 pub fn test_overlapping() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
-    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, 1, 1, 1, 1);
+    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
     assert!(maybe_wfc.is_some());
 }
 
 #[test]
 pub fn test_run() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
-    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, 1, 1, 1, 1);
+    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
 
     assert!(maybe_wfc.is_some());
 
@@ -201,7 +201,7 @@ pub fn test_run() {
 #[test]
 pub fn test_export() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
-    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, 1, 1, 1, 1);
+    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
     assert!(maybe_wfc.is_some());
 
     let mut wfc = maybe_wfc.unwrap();

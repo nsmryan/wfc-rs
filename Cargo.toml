@@ -1,6 +1,6 @@
 [package]
 name = "wfc-rs"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Noah Ryan <nsmryan@gmail.com>"]
 edition = "2018"
 license="MIT"
@@ -9,6 +9,7 @@ links="wfc"
 keywords=["wfc", "c", "ffi"]
 description="Binding to the krychu/wfc C library"
 readme="README.md"
+homepage="https://github.com/nsmryan/wfc-rs"
 
 [dependencies]
 libc="0.2"

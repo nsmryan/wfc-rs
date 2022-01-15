@@ -210,6 +210,7 @@ pub fn test_export() {
     assert_eq!(Ok(()), result);
 
     wfc.export("output.png").unwrap();
+    std::fs::remove_file("output.png");
 }
 
 #[test]

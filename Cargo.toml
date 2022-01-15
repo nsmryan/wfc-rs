@@ -12,5 +12,4 @@ libc="*"
 
 [build-dependencies]
 cc="*"
-bindgen="*"
 

@@ -142,6 +142,6 @@ pub fn test_export() {
     let result = wfc.run(Some(100));
     assert_eq!(Ok(()), result);
 
-    wfc.export("output.png");
+    wfc.export("output.png").unwrap();
 }
 

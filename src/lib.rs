@@ -54,6 +54,8 @@ impl WfcImage {
     pub fn from_vec(width: i32, height: i32, component_cnt: i32, data: Vec<u8>) -> Option<NonNull<WfcImage>> {
         unsafe {
             let image_ptr = wfc_img_create(width, height, component_cnt);
+            let length = data.len();
+            std::ptr::copy_nonoverlapping(data.as_ptr() as *mut u8, (*image_ptr).data as *mut u8, length);
             return NonNull::new(image_ptr);
         }
     }

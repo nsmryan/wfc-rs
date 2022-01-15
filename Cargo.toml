@@ -6,6 +6,8 @@ edition = "2018"
 license="MIT"
 build="build.rs"
 links="wfc"
+keywords=["wfc", "c", "ffi"]
+description="Binding to the krychu/wfc C library"
 
 [dependencies]
 libc="*"

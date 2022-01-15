@@ -114,10 +114,10 @@ impl Wfc {
                                       image.as_mut(),
                                       tile_width,
                                       tile_height,
-                                      expand_input,
-                                      xflip_tiles,
-                                      yflip_tiles,
-                                      rotate_tiles);
+                                      expand_input as i32,
+                                      xflip_tiles as i32,
+                                      yflip_tiles as i32,
+                                      rotate_tiles as i32);
 
             return Wfc::from_raw_parts(wfc, image.as_mut());
         }

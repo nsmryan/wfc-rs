@@ -1,5 +1,3 @@
-use std::env;
-
 use cc;
 
 fn main() {

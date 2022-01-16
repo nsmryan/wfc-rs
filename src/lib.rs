@@ -1,5 +1,4 @@
 use std::ffi;
-use std::ptr::NonNull;
 
 use libc;
 
@@ -51,20 +50,20 @@ impl WfcImage {
         return WfcImage { data, component_cnt, width, height };
     }
 
-    pub fn from_vec(width: i32, height: i32, component_cnt: i32, data: Vec<u8>) -> Option<NonNull<WfcImage>> {
+    pub fn from_vec(width: i32, height: i32, component_cnt: i32, data: Vec<u8>) -> *mut WfcImage {
         unsafe {
             let image_ptr = wfc_img_create(width, height, component_cnt);
             let length = data.len();
             std::ptr::copy_nonoverlapping(data.as_ptr() as *mut u8, (*image_ptr).data as *mut u8, length);
-            return NonNull::new(image_ptr);
+            return image_ptr;
         }
     }
 
-    pub fn from_file(filename: &str) -> Option<NonNull<WfcImage>> {
+    pub fn from_file(filename: &str) -> Option<*mut WfcImage> {
         unsafe {
-            let c_filename = ffi::CString::new(filename).unwrap();
+            let c_filename = ffi::CString::new(filename).ok()?;
             let image: *mut WfcImage = wfc_img_load(c_filename.as_ptr());
-            return NonNull::new(image);
+            return Some(image);
         }
     }
 
@@ -83,26 +82,32 @@ impl WfcImage {
     }
 }
 
+impl Drop for WfcImage {
+    fn drop(&mut self) {
+        unsafe {
+            wfc_img_destroy(self as *mut WfcImage);
+        }
+    }
+}
+
 /// The main Wfc structure. This structure is normally created
 /// by calling overlapping to match the underlying C function wfc_overlapping.
 ///
 /// Once created, the Wfc can be used to create an image with 'run', and this
 /// image can be saved with 'export'.
 pub struct Wfc {
-    pub wfc: NonNull<libc::c_void>,
-    pub image: NonNull<WfcImage>,
+    pub wfc: *mut libc::c_void,
+    pub image: *mut WfcImage,
 }
 
 impl Wfc {
-    pub fn from_raw_parts(wfc: *mut libc::c_void, image: *mut WfcImage) -> Option<Wfc> {
-        let wfc = NonNull::new(wfc)?;
-        let image = NonNull::new(image)?;
-        return Some(Wfc { wfc, image });
+    pub fn from_raw_parts(wfc: *mut libc::c_void, image: *mut WfcImage) -> Wfc {
+        return Wfc { wfc, image };
     }
 
     pub fn overlapping(output_width: i32,
                        output_height: i32,
-                       mut image: NonNull<WfcImage>,
+                       image: *mut WfcImage,
                        tile_width: i32,
                        tile_height: i32,
                        expand_input: bool,
@@ -110,10 +115,13 @@ impl Wfc {
                        yflip_tiles: bool,
                        rotate_tiles: bool) -> Option<Wfc> {
         unsafe {
-            //let mut image = WfcImage::from_file(filename)?;
+            if image.is_null() {
+                return None;
+            }
+
             let wfc = wfc_overlapping(output_width,
                                       output_height,
-                                      image.as_mut(),
+                                      image.as_mut()?,
                                       tile_width,
                                       tile_height,
                                       expand_input as i32,
@@ -121,16 +129,21 @@ impl Wfc {
                                       yflip_tiles as i32,
                                       rotate_tiles as i32);
 
-            return Wfc::from_raw_parts(wfc, image.as_mut());
+            if wfc.is_null() {
+                return None;
+            }
+
+            return Some(Wfc::from_raw_parts(wfc, image.as_mut()?));
         }
     }
 
     pub fn run(&mut self, max_collapse_cnt: Option<i32>) -> Result<(), &str> {
         unsafe {
-            wfc_init(self.wfc.as_mut());
+            let mut wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
+            wfc_init(wfc_ptr);
 
             let max_cnt = max_collapse_cnt.unwrap_or(-1);
-            let result: libc::c_int = wfc_run(self.wfc.as_mut(), max_cnt);
+            let result: libc::c_int = wfc_run(wfc_ptr, max_cnt);
 
             if result == 0 {
                 return Err("wfc_run returned an error!");
@@ -142,8 +155,9 @@ impl Wfc {
 
     pub fn export(&mut self, filename: &str) -> Result<(), &str> {
         unsafe {
-            let c_filename = ffi::CString::new(filename).unwrap();
-            let result = wfc_export(self.wfc.as_mut(), c_filename.as_ptr());
+            let c_filename = ffi::CString::new(filename).map_err(|_| "Filename to CString error")?;
+            let mut wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
+            let result = wfc_export(wfc_ptr, c_filename.as_ptr());
 
             if result == 0 {
                 return Err("wfc_export returned an error!");
@@ -153,18 +167,19 @@ impl Wfc {
         }
     }
 
-    pub fn output_image(&mut self) -> Option<NonNull<WfcImage>> {
+    pub fn output_image(&mut self) -> Option<*mut WfcImage> {
         unsafe {
-            let image = wfc_output_image(self.wfc.as_mut());
-            return NonNull::new(image);
-        }
+            return Some(wfc_output_image(self.wfc.as_mut()?));
+        };
     }
 
     /// Convenience function for extracting a copy of the input
     ///
     pub fn vec(&mut self) -> Vec<u8> {
         unsafe {
-            return self.image.as_ref().vec();
+            // We are assuming that this unwrap succeeds, as this reference
+            // is checked when the Wfc is created.
+            return self.image.as_ref().unwrap().vec();
         }
     }
 }
@@ -173,9 +188,9 @@ impl Drop for Wfc {
     fn drop(&mut self) {
         unsafe {
             // segfaults for some reason.
-            //wfc_destroy(self.wfc.as_mut());
-
-            wfc_img_destroy(self.image.as_mut());
+            if let Some(wfc_ptr) = self.wfc.as_mut() {
+                wfc_destroy(wfc_ptr);
+            }
         }
     }
 }
@@ -183,18 +198,22 @@ impl Drop for Wfc {
 #[test]
 pub fn test_overlapping() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
-    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
-    assert!(maybe_wfc.is_some());
+    {
+        let wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
+    }
+    {
+        let wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
+    }
+    {
+        let wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
+    }
 }
 
 #[test]
 pub fn test_run() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
-    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
 
-    assert!(maybe_wfc.is_some());
-
-    let mut wfc = maybe_wfc.unwrap();
+    let mut wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true).unwrap();
 
     let result = wfc.run(Some(1));
     assert_eq!(Ok(()), result);
@@ -203,11 +222,8 @@ pub fn test_run() {
 #[test]
 pub fn test_export() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
-    let maybe_wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
-    assert!(maybe_wfc.is_some());
 
-    let mut wfc = maybe_wfc.unwrap();
-
+    let mut wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true).unwrap();
     let result = wfc.run(Some(100));
     assert_eq!(Ok(()), result);
 
@@ -220,8 +236,8 @@ pub fn test_image() {
     let mut image = WfcImage::from_file("data/cave.png").unwrap();
 
     unsafe {
-        let bytes = image.as_ref().vec();
-        assert_eq!(image.as_ref().num_bytes(), bytes.len());
+        let bytes = image.as_ref().unwrap().vec();
+        assert_eq!(image.as_ref().unwrap().num_bytes(), bytes.len());
     }
 }
 

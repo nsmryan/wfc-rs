@@ -137,10 +137,16 @@ impl Wfc {
         }
     }
 
-    pub fn run(&mut self, max_collapse_cnt: Option<i32>) -> Result<(), &str> {
+    pub fn run(&mut self, max_collapse_cnt: Option<i32>, seed: Option<u32>) -> Result<(), &str> {
         unsafe {
             let mut wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
             wfc_init(wfc_ptr);
+
+            // wfc sets the srand seed with time, but only uses rand in wfc_rand.
+            // If given a seed, we can apply it between wfc_init and wfc_run.
+            if let Some(seed) = seed {
+                libc::srand(seed)
+            }
 
             let max_cnt = max_collapse_cnt.unwrap_or(-1);
             let result: libc::c_int = wfc_run(wfc_ptr, max_cnt);
@@ -215,7 +221,7 @@ pub fn test_run() {
 
     let mut wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true).unwrap();
 
-    let result = wfc.run(Some(1));
+    let result = wfc.run(Some(10), Some(1));
     assert_eq!(Ok(()), result);
 }
 
@@ -224,7 +230,7 @@ pub fn test_export() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
 
     let mut wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true).unwrap();
-    let result = wfc.run(Some(100));
+    let result = wfc.run(Some(100), Some(1));
     assert_eq!(Ok(()), result);
 
     wfc.export("output.png").unwrap();

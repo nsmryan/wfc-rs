@@ -6,19 +6,19 @@ use libc;
 
 #[link(name="wfc")]
 extern {
-    fn wfc_init(wfc: *mut libc::c_void);
+    fn wfc_init(wfc: *mut std::ffi::c_void);
 
-    fn wfc_run(wfc: *mut libc::c_void, max_collapse_cnt: libc::c_int) -> libc::c_int;
+    fn wfc_run(wfc: *mut std::ffi::c_void, max_collapse_cnt: libc::c_int) -> libc::c_int;
 
-    fn wfc_export(wfc: *const libc::c_void, filename: *const libc::c_char) -> libc::c_int;
+    fn wfc_export(wfc: *const std::ffi::c_void, filename: *const libc::c_char) -> libc::c_int;
 
-    fn wfc_destroy(wfc: *mut libc::c_void);
+    fn wfc_destroy(wfc: *mut std::ffi::c_void);
 
     fn wfc_img_copy(image: *const WfcImage) -> *mut WfcImage;
 
     fn wfc_img_destroy(image: *mut WfcImage);
 
-    fn wfc_output_image(wfc: *mut libc::c_void) -> *mut WfcImage;
+    fn wfc_output_image(wfc: *mut std::ffi::c_void) -> *mut WfcImage;
 
     fn wfc_img_load(filename: *const libc::c_char) -> *mut WfcImage;
 
@@ -32,7 +32,7 @@ extern {
                        expand_input: libc::c_int,
                        xflip_tiles: libc::c_int,
                        yflip_tiles: libc::c_int,
-                       rotate_tiles: libc::c_int) -> *mut libc::c_void;
+                       rotate_tiles: libc::c_int) -> *mut std::ffi::c_void;
 }
 
 #[repr(C)]

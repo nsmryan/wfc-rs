@@ -139,7 +139,7 @@ impl Wfc {
 
     pub fn run(&mut self, max_collapse_cnt: Option<i32>, seed: Option<u32>) -> Result<(), &str> {
         unsafe {
-            let mut wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
+            let wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
             wfc_init(wfc_ptr);
 
             // wfc sets the srand seed with time, but only uses rand in wfc_rand.
@@ -162,7 +162,7 @@ impl Wfc {
     pub fn export(&mut self, filename: &str) -> Result<(), &str> {
         unsafe {
             let c_filename = ffi::CString::new(filename).map_err(|_| "Filename to CString error")?;
-            let mut wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
+            let wfc_ptr = self.wfc.as_mut().ok_or("Wfc pointer invalid")?;
             let result = wfc_export(wfc_ptr, c_filename.as_ptr());
 
             if result == 0 {

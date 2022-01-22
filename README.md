@@ -13,7 +13,7 @@ Note that this is an early, but working version.
 
 Once the crate has been added to Cargo.toml as:
 ```
-wfc_rs = "0.3"
+wfc_rs = "0.5"
 ```
 
 create a WfcImage with from_vec or from_file:

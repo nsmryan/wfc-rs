@@ -18,7 +18,7 @@ wfc_rs = "0.5"
 
 create a WfcImage with from_vec or from_file:
 ```rust
-let image = WfcImage::from_image("data/cave.png")?;
+let image = WfcImage::from_file("data/cave.png")?;
 ```
 This creates an optional NonNull, which contains a pointer to the underlying
 WfcImage structure. This structure is a repr(C) struct that matches the 'wfc.h'

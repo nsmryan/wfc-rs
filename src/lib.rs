@@ -2,6 +2,7 @@ use std::ffi;
 
 use libc;
 
+#[allow(dead_code)]
 
 #[link(name="wfc")]
 extern {
@@ -205,13 +206,13 @@ impl Drop for Wfc {
 pub fn test_overlapping() {
     let image = WfcImage::from_file("data/cave.png").unwrap();
     {
-        let wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
+        let _wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
     }
     {
-        let wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
+        let _wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
     }
     {
-        let wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
+        let _wfc = Wfc::overlapping(32, 32, image, 3, 3, true, true, true, true);
     }
 }
 
@@ -234,12 +235,12 @@ pub fn test_export() {
     assert_eq!(Ok(()), result);
 
     wfc.export("output.png").unwrap();
-    std::fs::remove_file("output.png");
+    std::fs::remove_file("output.png").unwrap();
 }
 
 #[test]
 pub fn test_image() {
-    let mut image = WfcImage::from_file("data/cave.png").unwrap();
+    let image = WfcImage::from_file("data/cave.png").unwrap();
 
     unsafe {
         let bytes = image.as_ref().unwrap().vec();

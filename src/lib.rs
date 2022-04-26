@@ -104,6 +104,24 @@ impl WfcImage {
             return ((*self.img).width * (*self.img).height * (*self.img).component_cnt) as usize;
         }
     }
+
+    pub fn component_cnt(&self) -> libc::c_int {
+        unsafe {
+            return (*self.img).component_cnt;
+        }
+    }
+
+    pub fn width(&self) -> libc::c_int {
+        unsafe {
+            return(*self.img).width;
+        }
+    }
+
+    pub fn height(&self) -> libc::c_int {
+        unsafe {
+            return(*self.img).height;
+        }
+    }
 }
 
 impl Drop for WfcImage {
